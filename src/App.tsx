@@ -36,7 +36,7 @@ function App() {
   const [htmlTag, setHtmlTag] = useState('');
   const [component, setComponent] = useState('Find My Service')
   const [groupId, setGroupId] = useState('a8acaca3d4514d40bc7f302a8db291fb')
-  const [webMapId, setWebMapId] = useState('')
+  const [webMapId, setWebMapId] = useState('d5dda743788a4b0688fe48f43ae7beb9')
   const [address, setAddress] = useState<string>('');
   const [stationary, setStationary] = useState(false);
   const [zoom, setZoom] = useState<number>();
@@ -68,7 +68,7 @@ function App() {
     mapWidgets, expandableWidgets, expandedWidgets
   ])
 
-  const centerValid = (center: string) => {
+  const centerValid = (center: string | undefined) => {
     
     const centerInput = document.getElementById('center') as HTMLCalciteInputElement;
     if (centerInput) {
@@ -80,35 +80,35 @@ function App() {
       }
     }
   }
-  const validationConstraints: ValidationConstraint[] = [
-    {
-      id: "center",
-      patterns: [
-        {
-          value: /^(-?(1[0-7][0-9]|[1-9]?[0-9]|180)(\.\d{1,6})?),\s*(-?(90|[1-8]?[0-9])(\.\d{1,6})?)$/,
-          message: "Coordinates not valid, needs to be 'longitude,latitude'",
-          icon: "exclamation-mark-triangle-f"
-        }
-      ]
-    }
-  ];
-
-  // Specifies the custom validationMessage, validationIcon, and status when the user interacts with the component.
-  function setCustomValidity(el: HTMLCalciteInputElement, message: string, icon: string) {
-    if (message) {
-      el.validationMessage = message;
-      el.validationIcon = icon;
-      el.status = "invalid";
-    } else {
-      el.validationMessage = "";
-      el.validationIcon = false;
-      el.status = "idle";
-    }
-  }
+  
   useEffect(() => {
     // Defines an array of objects with validation constraints, icons, and messages for fields.
     if (component === 'Web Map') {
-
+      const validationConstraints: ValidationConstraint[] = [
+        {
+          id: "center",
+          patterns: [
+            {
+              value: /^(-?(1[0-7][0-9]|[1-9]?[0-9]|180)(\.\d{1,6})?),\s*(-?(90|[1-8]?[0-9])(\.\d{1,6})?)$/,
+              message: "Coordinates not valid, needs to be 'longitude,latitude'",
+              icon: "exclamation-mark-triangle-f"
+            }
+          ]
+        }
+      ];
+    
+      // Specifies the custom validationMessage, validationIcon, and status when the user interacts with the component.
+      function setCustomValidity(el: HTMLCalciteInputElement, message: string, icon: string) {
+        if (message) {
+          el.validationMessage = message;
+          el.validationIcon = icon;
+          el.status = "invalid";
+        } else {
+          el.validationMessage = "";
+          el.validationIcon = false;
+          el.status = "idle";
+        }
+      }
     //window.onload = () => {
       // Adds event listeners to form elements to update the validationMessage, validationIcon, and status on blur.
       validationConstraints.forEach(constraint => {
@@ -130,7 +130,7 @@ function App() {
       });
    // };
     }
-  }, [component, validationConstraints])
+  }, [component])
 
   const updatePosition = (position: string, widget: string) => {
     if (position === 'top-left') {

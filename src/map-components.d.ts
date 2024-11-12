@@ -2,14 +2,14 @@ declare namespace JSX {
     interface IntrinsicElements {
       'map-web-component': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
         'item-id'?: string;
-        search?: boolean;
-        legend?: boolean;
+        search?: string;
+        legend?: string;
         scale?: number | string;
         zoom?: number | string;
-        'layer-list'?: boolean;
+        'layer-list'?: string;
         address?: string;
-        center?: string;
-        stationary?: boolean;
+        center?: string | undefined;
+        stationary?: string;
         'top-right'?: string[];
         'top-left'?: string[];
         'bottom-right'?: string[];
