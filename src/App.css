@@ -1,0 +1,28 @@
+.component-container {
+  display: flex;
+  margin-top: 2em;
+}
+
+.settings {
+  width: 35vw;
+  height: calc(100vh - 200px);
+  overflow: auto;
+}
+
+.component {
+  width: 65vw;
+  height: calc(100vh - 200px);
+}
+
+body, html {
+  padding-top: 0 !important;
+}
+
+calcite-label {
+  margin: 1em;
+}
+
+code {
+  font-size: smaller;
+  margin-bottom: 1em;
+}
