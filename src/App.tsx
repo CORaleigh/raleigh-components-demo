@@ -61,7 +61,7 @@ function App() {
       element = document.querySelector('map-web-component')
     }
     if (element) {
-      setHtmlTag(element.outerHTML.replace(element.innerHTML as string, '').replace('=""', ''));
+      setHtmlTag(element.outerHTML.replace(element.innerHTML as string, '').replace(/=""/g, ''));
     }
   }, [component,categories,groupId,webMapId,address,stationary,zoom,center,
     topLeftPosition,topRightPosition,bottomLeftPosition, bottomRightPosition,
