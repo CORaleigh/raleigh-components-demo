@@ -6,14 +6,17 @@ import "@esri/calcite-components/dist/components/calcite-list";
 import "@esri/calcite-components/dist/components/calcite-list-item";
 import "@esri/calcite-components/dist/components/calcite-select";
 import "@esri/calcite-components/dist/components/calcite-label";
+import "@esri/calcite-components/dist/components/calcite-dialog";
+import "@esri/calcite-components/dist/components/calcite-button";
 
 import "@esri/calcite-components/dist/components/calcite-option";
 import "@esri/calcite-components/dist/components/calcite-switch";
 import "@esri/calcite-components/dist/components/calcite-accordion";
 import "@esri/calcite-components/dist/components/calcite-accordion-item";
 
-import { CalciteAccordion, CalciteAccordionItem, CalciteInput, CalciteLabel, CalciteList, CalciteListItem, CalciteOption, CalciteSelect, CalciteSwitch } from "@esri/calcite-components-react";
-import { useEffect, useState } from 'react';
+import { CalciteAccordion, CalciteAccordionItem, CalciteButton, CalciteDialog, CalciteInput, CalciteLabel, CalciteList, CalciteListItem, CalciteOption, CalciteSelect, CalciteSwitch } from "@esri/calcite-components-react";
+import { useEffect, useRef, useState } from 'react';
+import WebMapSearch from './WebMapSearch';
 interface ValidationConstraint {
   id: string;
   patterns: ValidationPattern[];
@@ -37,7 +40,9 @@ function App() {
   const [component, setComponent] = useState('Find My Service')
   const [groupId, setGroupId] = useState('a8acaca3d4514d40bc7f302a8db291fb')
   const [webMapId, setWebMapId] = useState('d5dda743788a4b0688fe48f43ae7beb9')
-  const [address, setAddress] = useState<string>('');
+  const [address, setAddress] = useState<string | undefined>();
+  const addressInput = useRef<HTMLCalciteInputElement>(null);
+
   const [stationary, setStationary] = useState(false);
   const [zoom, setZoom] = useState<number>();
   const [center, setCenter] = useState<string>();
@@ -51,6 +56,7 @@ function App() {
   const [mapWidgets, setMapWidgets] = useState<string[]>([]);
   const [expandableWidgets, setExpandableWidgets] = useState<string[]>([]);
   const [expandedWidgets, setExpandedWidgets] = useState<string[]>([]);
+  const [showSearch, setShowSearch] = useState<boolean>(false);
 
   useEffect(() => {
     let element;
@@ -191,7 +197,7 @@ function App() {
         <CalciteOption selected={component === 'Web Map'} value="Web Map" label='Web Map'></CalciteOption>
       </CalciteSelect>
     </CalciteLabel>
-    <code>{htmlTag}</code>
+    <div className='code-container'><code>{htmlTag}</code></div>
     {component === 'Find My Service' && 
     
     <div className='component-container'>
@@ -233,7 +239,10 @@ function App() {
         <div className='settings'>
         <CalciteLabel>
           Web Map ID
-          <CalciteInput onCalciteInputChange={e => setWebMapId(e.target.value)} value={webMapId}></CalciteInput>
+          <CalciteInput onCalciteInputChange={e => setWebMapId(e.target.value)} value={webMapId}>
+            <CalciteButton kind='inverse'  iconStart='magnifying-glass' slot="action" scale='m' onClick={() => setShowSearch(prevState => !prevState)}>
+            </CalciteButton>
+          </CalciteInput>
         </CalciteLabel>
         <CalciteLabel>
           Stationary
@@ -241,7 +250,18 @@ function App() {
         </CalciteLabel>        
         <CalciteLabel>
           Address
-          <CalciteInput onCalciteInputChange={e => setAddress(e.target.value)}></CalciteInput>
+          <CalciteInput ref={addressInput} onCalciteInputChange={e => setAddress(e.target.value)}>
+            <CalciteButton kind='inverse' iconStart='magnifying-glass' slot="action" scale='m' onClick={() => {
+              if (addressInput.current) {
+                setAddress(undefined);
+                setTimeout(() => {
+                  setAddress(addressInput.current?.value)
+                });
+              }
+            }}>
+            </CalciteButton>               
+          </CalciteInput>
+       
         </CalciteLabel>
         <CalciteLabel>
           Center
@@ -338,7 +358,7 @@ function App() {
         
         <div className='component'>
         <map-web-component 
-          address={address.length ? address : undefined}
+          address={address}
           top-left={topLeftPosition.length > 0 ? topLeftPosition : undefined} 
           top-right={topRightPosition.length > 0 ? topRightPosition : undefined} 
           bottom-left={bottomLeftPosition.length > 0 ? bottomLeftPosition : undefined} 
@@ -355,7 +375,9 @@ function App() {
 
           </map-web-component>
           </div>
-
+          <CalciteDialog heading='Select A Web Map' open={showSearch} onCalciteDialogClose={() => setShowSearch(false)}>
+            <WebMapSearch organizationId={'v400IkDOw1ad7Yad'} onWebMapSelect={(id: string) => {setWebMapId(id); setShowSearch(prevState => !prevState)}}></WebMapSearch>
+          </CalciteDialog>
         </div>
     
     }

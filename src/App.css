@@ -3,15 +3,64 @@
   margin-top: 2em;
 }
 
+calcite-label, calcite-dialog {
+  font-family: var(--calcite-sans-family);
+}
+
+
+
 .settings {
   width: 35vw;
   height: calc(100vh - 200px);
   overflow: auto;
+  font-family: var(--calcite-sans-family);
 }
 
 .component {
   width: 65vw;
   height: calc(100vh - 200px);
+}
+
+.map-preview {
+  width: 50vw;
+  max-height: calc(100% - 175px);
+}
+.map-list {
+  width: 50vw;
+  overflow: auto;
+  min-height: calc(100% - 70px);
+}
+
+.map-list img {
+  max-width: 200px;
+}
+
+.pagination-wrapper {
+  align-self: center;
+  max-width: 100%;
+}
+
+
+calcite-pagination {
+  justify-content: center;
+}
+
+.dialog-content {
+  height: calc(100% - 70px);
+}
+
+.search-container {
+  display: flex;
+  max-height: 100%;
+}
+
+.map-list calcite-list {
+  max-height: calc(100% - 36px);
+  overflow: auto;
+}
+
+.map-list calcite-pagination {
+  width: 100%;
 }
 
 body, html {
@@ -22,7 +71,11 @@ calcite-label {
   margin: 1em;
 }
 
-code {
+.code-container {
   font-size: smaller;
   margin: 1em;
+}
+
+.map-preview .arcgis-map {
+  height: calc(100% - 75px);
 }
