@@ -250,7 +250,7 @@ function App() {
         </CalciteLabel>        
         <CalciteLabel>
           Address
-          <CalciteInput ref={addressInput} onCalciteInputChange={e => setAddress(e.target.value)}>
+          <CalciteInput ref={addressInput} value={address} onCalciteInputChange={e => setAddress(e.target.value)}>
             <CalciteButton kind='inverse' iconStart='magnifying-glass' slot="action" scale='m' onClick={() => {
               if (addressInput.current) {
                 setAddress(undefined);
@@ -265,11 +265,11 @@ function App() {
         </CalciteLabel>
         <CalciteLabel>
           Center
-          <CalciteInput id="center" pattern='^(-?(1[0-7][0-9]|[1-9]?[0-9]|180)(\.\d{1,6})?),\s*(-?(90|[1-8]?[0-9])(\.\d{1,6})?)' onCalciteInputChange={e => setCenter(e.target.value)}></CalciteInput>
+          <CalciteInput id="center" value={center} pattern='^(-?(1[0-7][0-9]|[1-9]?[0-9]|180)(\.\d{1,6})?),\s*(-?(90|[1-8]?[0-9])(\.\d{1,6})?)' onCalciteInputChange={e => setCenter(e.target.value)}></CalciteInput>
         </CalciteLabel>        
         <CalciteLabel>
           Zoom Level
-          <CalciteInput type='number' max={20} min={0} onCalciteInputChange={(e) => {
+          <CalciteInput value={zoom?.toString()} type='number' max={20} min={0} onCalciteInputChange={(e) => {
               const zoomValue = parseInt(e.target.value)
               setZoom(isNaN(zoomValue) ? undefined : zoomValue)
             }}></CalciteInput>
