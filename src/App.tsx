@@ -249,7 +249,10 @@ function App() {
         </CalciteLabel>        
         <CalciteLabel>
           Zoom Level
-          <CalciteInput type='number' max={20} min={0} onCalciteInputChange={e => setZoom(parseFloat(e.target.value))}></CalciteInput>
+          <CalciteInput type='number' max={20} min={0} onCalciteInputChange={(e) => {
+              const zoomValue = parseInt(e.target.value)
+              setZoom(isNaN(zoomValue) ? undefined : zoomValue)
+            }}></CalciteInput>
         </CalciteLabel>        
         <CalciteAccordion>
           <CalciteAccordionItem heading='Widgets'>
