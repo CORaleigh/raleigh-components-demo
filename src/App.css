@@ -3,8 +3,12 @@
   margin-top: 2em;
 }
 
-calcite-label, calcite-dialog {
+calcite-label, calcite-dialog, calcite-shell {
   font-family: var(--calcite-sans-family);
+}
+
+map-web-component {
+  height: 100%;
 }
 
 
@@ -74,8 +78,10 @@ calcite-label {
 .code-container {
   font-size: smaller;
   margin: 1em;
+  height: auto;
 }
 
 .map-preview .arcgis-map {
   height: calc(100% - 75px);
 }
+

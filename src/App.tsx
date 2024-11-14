@@ -13,8 +13,15 @@ import "@esri/calcite-components/dist/components/calcite-option";
 import "@esri/calcite-components/dist/components/calcite-switch";
 import "@esri/calcite-components/dist/components/calcite-accordion";
 import "@esri/calcite-components/dist/components/calcite-accordion-item";
+import "@esri/calcite-components/dist/components/calcite-shell";
+import "@esri/calcite-components/dist/components/calcite-shell-panel";
+import "@esri/calcite-components/dist/components/calcite-navigation";
+import "@esri/calcite-components/dist/components/calcite-navigation-logo";
 
-import { CalciteAccordion, CalciteAccordionItem, CalciteButton, CalciteDialog, CalciteInput, CalciteLabel, CalciteList, CalciteListItem, CalciteOption, CalciteSelect, CalciteSwitch } from "@esri/calcite-components-react";
+import "@esri/calcite-components/dist/components/calcite-panel";
+
+
+import { CalciteAccordion, CalciteAccordionItem, CalciteAction, CalciteButton, CalciteDialog, CalciteInput, CalciteLabel, CalciteList, CalciteListItem, CalciteNavigation, CalciteNavigationLogo, CalciteOption, CalcitePanel, CalciteSelect, CalciteShell, CalciteShellPanel, CalciteSwitch } from "@esri/calcite-components-react";
 import { useEffect, useRef, useState } from 'react';
 import WebMapSearch from './WebMapSearch';
 interface ValidationConstraint {
@@ -58,6 +65,10 @@ function App() {
   const [expandedWidgets, setExpandedWidgets] = useState<string[]>([]);
   const [showSearch, setShowSearch] = useState<boolean>(false);
 
+  const [showSettings, setShowSettings] = useState<boolean>(true);
+
+  const [overlay, setOverlay] = useState<boolean>(false);
+
   useEffect(() => {
     let element;
     if (component === 'Find My Service') {
@@ -87,6 +98,14 @@ function App() {
     }
   }
   
+  useEffect(() => {
+    const handleResize = () => setOverlay(window.innerWidth < 768);
+    
+    window.addEventListener('resize', handleResize);
+    // Cleanup event listener on component unmount
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     // Defines an array of objects with validation constraints, icons, and messages for fields.
     if (component === 'Web Map') {
@@ -190,54 +209,48 @@ function App() {
   }
   return (
     <>
-    <CalciteLabel>
-      Select Component
-      <CalciteSelect onCalciteSelectChange={(e) => setComponent(e.target.selectedOption.value)} label={''}>
-      <CalciteOption selected={component === 'Find My Service'} value="Find My Service" label='Find My Service'></CalciteOption>
-        <CalciteOption selected={component === 'Web Map'} value="Web Map" label='Web Map'></CalciteOption>
-      </CalciteSelect>
-    </CalciteLabel>
-    <div className='code-container'><code>{htmlTag}</code></div>
-    {component === 'Find My Service' && 
-    
-    <div className='component-container'>
-      <div className='settings'>
-      <CalciteLabel>
+
+    <CalciteShell>
+      <CalciteNavigation slot='header'>
+        <CalciteAction slot='logo' icon='gear' text={''} onClick={() => setShowSettings(prevState => !prevState)}></CalciteAction>
+        <CalciteNavigationLogo slot='logo' heading='Raleigh Web Components'></CalciteNavigationLogo>
+      </CalciteNavigation>
+      <CalciteShellPanel displayMode={overlay ? 'overlay' : 'dock'} collapsed={!showSettings} widthScale='l' slot='panel-start' position='start' id='shell-panel-start'>
+        <CalcitePanel heading='Settings'>
+        <CalciteLabel>
+        Select Component
+        <CalciteSelect onCalciteSelectChange={(e) => setComponent(e.target.selectedOption.value)} label={''}>
+        <CalciteOption selected={component === 'Find My Service'} value="Find My Service" label='Find My Service'></CalciteOption>
+          <CalciteOption selected={component === 'Web Map'} value="Web Map" label='Web Map'></CalciteOption>
+        </CalciteSelect>
+      </CalciteLabel>
+          {component === 'Find My Service' && 
+            <>
+            <CalciteLabel>
           Group ID
           <CalciteInput onCalciteInputChange={e => setGroupId(e.target.value)} value={groupId}></CalciteInput>
         </CalciteLabel>
-      <CalciteLabel>
-        Categories
-      <CalciteList selectionMode='multiple' onCalciteListChange={(e) => {
-    const selected = e.target.selectedItems.map(item => {
-        return item.value;
-    });
-    setCategories(selected);
-  }}>
-    <CalciteListItem selected={categories.includes('Community')} value="Community" label='Community'></CalciteListItem>
-    <CalciteListItem selected={categories.includes('Elections')} value="Elections" label='Elections'></CalciteListItem>
-    <CalciteListItem selected={categories.includes('Environmental')} value="Environmental" label='Environmental'></CalciteListItem>
-    <CalciteListItem selected={categories.includes('Leaf Collection')} value="Leaf Collection" label='Leaf Collection'></CalciteListItem>
-    <CalciteListItem selected={categories.includes('Recreation')} value="Recreation" label='Recreation'></CalciteListItem>
-    <CalciteListItem selected={categories.includes('Solid Waste')} value="Solid Waste" label='Solid Waste'></CalciteListItem>
-</CalciteList>
-</CalciteLabel>
-
-      </div>
-      <div className='component'>
-      <find-my-service group-id={groupId}
-  categories={categories}
-></find-my-service>
-      </div>
-
-    </div>
-      
-
-    }
-    {component === 'Web Map' && 
-      <div className='component-container'>
-        <div className='settings'>
-        <CalciteLabel>
+            <CalciteLabel>
+              Categories
+            <CalciteList selectionMode='multiple' onCalciteListChange={(e) => {
+          const selected = e.target.selectedItems.map(item => {
+              return item.value;
+          });
+          setCategories(selected);
+        }}>
+          <CalciteListItem selected={categories.includes('Community')} value="Community" label='Community'></CalciteListItem>
+          <CalciteListItem selected={categories.includes('Elections')} value="Elections" label='Elections'></CalciteListItem>
+          <CalciteListItem selected={categories.includes('Environmental')} value="Environmental" label='Environmental'></CalciteListItem>
+          <CalciteListItem selected={categories.includes('Leaf Collection')} value="Leaf Collection" label='Leaf Collection'></CalciteListItem>
+          <CalciteListItem selected={categories.includes('Recreation')} value="Recreation" label='Recreation'></CalciteListItem>
+          <CalciteListItem selected={categories.includes('Solid Waste')} value="Solid Waste" label='Solid Waste'></CalciteListItem>
+      </CalciteList>
+      </CalciteLabel>            
+            </>
+          }
+          {component === 'Web Map' && 
+              <>
+               <CalciteLabel>
           Web Map ID
           <CalciteInput onCalciteInputChange={e => setWebMapId(e.target.value)} value={webMapId}>
             <CalciteButton kind='inverse'  iconStart='magnifying-glass' slot="action" scale='m' onClick={() => setShowSearch(prevState => !prevState)}>
@@ -354,36 +367,44 @@ function App() {
             </CalciteList>  
           </CalciteAccordionItem>
         </CalciteAccordion>
-        </div>
-        
-        <div className='component'>
-        <map-web-component 
-          address={address}
-          top-left={topLeftPosition.length > 0 ? topLeftPosition : undefined} 
-          top-right={topRightPosition.length > 0 ? topRightPosition : undefined} 
-          bottom-left={bottomLeftPosition.length > 0 ? bottomLeftPosition : undefined} 
-          bottom-right={bottomRightPosition.length > 0 ? bottomRightPosition : undefined}     
-          expand-positions={expandableWidgets.length > 0 ? expandableWidgets : undefined} 
-          expanded={expandedWidgets.length > 0 ? expandedWidgets : undefined} 
-          item-id={webMapId} 
-          layer-list={mapWidgets.includes('layer-list') ? '' : undefined} 
-          stationary={stationary ? '' : undefined}
-          zoom={zoom}
-          center={centerValid(center)}
-          search={mapWidgets.includes('search') ? '' : undefined} 
-          legend={mapWidgets.includes('legend') ? '' : undefined}>
+              </>
+          }
+        </CalcitePanel>
 
-          </map-web-component>
-          </div>
-          <CalciteDialog heading='Select A Web Map' open={showSearch} onCalciteDialogClose={() => setShowSearch(false)}>
+      </CalciteShellPanel>
+      <CalcitePanel>
+
+      <div className='code-container'><code>{htmlTag}</code></div>
+
+      {component === 'Find My Service' && 
+      <find-my-service group-id={groupId}
+  categories={categories}
+></find-my-service>}
+        {component === 'Web Map' && 
+                <map-web-component 
+                address={address}
+                top-left={topLeftPosition.length > 0 ? topLeftPosition : undefined} 
+                top-right={topRightPosition.length > 0 ? topRightPosition : undefined} 
+                bottom-left={bottomLeftPosition.length > 0 ? bottomLeftPosition : undefined} 
+                bottom-right={bottomRightPosition.length > 0 ? bottomRightPosition : undefined}     
+                expand-positions={expandableWidgets.length > 0 ? expandableWidgets : undefined} 
+                expanded={expandedWidgets.length > 0 ? expandedWidgets : undefined} 
+                item-id={webMapId} 
+                layer-list={mapWidgets.includes('layer-list') ? '' : undefined} 
+                stationary={stationary ? '' : undefined}
+                zoom={zoom}
+                center={centerValid(center)}
+                search={mapWidgets.includes('search') ? '' : undefined} 
+                legend={mapWidgets.includes('legend') ? '' : undefined}>
+      
+                </map-web-component>
+        }
+      </CalcitePanel>
+
+    </CalciteShell>
+    <CalciteDialog heading='Select A Web Map' open={showSearch} onCalciteDialogClose={() => setShowSearch(false)}>
             <WebMapSearch organizationId={'v400IkDOw1ad7Yad'} onWebMapSelect={(id: string) => {setWebMapId(id); setShowSearch(prevState => !prevState)}}></WebMapSearch>
           </CalciteDialog>
-        </div>
-    
-    }
-
-
-
     </>
   )
 }
