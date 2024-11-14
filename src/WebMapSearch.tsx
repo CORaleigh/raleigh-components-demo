@@ -84,8 +84,8 @@ const WebMapSearch: React.FC<WebMapSearchProps> = ({
         });
         const m = await item.load();
 
-        e.target.goTo(m.extent)
-
+        //e.target.goTo(m.extent)
+        e.target.extent = m.extent;
         
       }
     },
@@ -130,7 +130,7 @@ const WebMapSearch: React.FC<WebMapSearchProps> = ({
       ></CalciteInput>
        
       <div className="search-container">
-        <div className="map-list">
+        <CalcitePanel className="list-panel">
           <CalciteList
             selectionMode="single"
             onCalciteListChange={handleMapSelect}
@@ -161,9 +161,8 @@ const WebMapSearch: React.FC<WebMapSearchProps> = ({
               }}
             ></CalcitePagination>
           </div>
-        </div>
-        <div className="map-preview">
-            <CalcitePanel>
+        </CalcitePanel>
+            <CalcitePanel className="map-panel">
           {!selectedWebMap && <CalciteScrim>Select a web map</CalciteScrim>}
           {mapHasErrors && <CalciteScrim><CalciteNotice
                 icon="exclamation-mark-triangle-f"
@@ -201,7 +200,6 @@ const WebMapSearch: React.FC<WebMapSearchProps> = ({
           )}
            </CalcitePanel>
 
-        </div>
       </div>
     </div>
   );

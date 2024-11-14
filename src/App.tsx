@@ -571,6 +571,7 @@ function App() {
         heading="Select A Web Map"
         open={showSearch}
         onCalciteDialogClose={() => setShowSearch(false)}
+        widthScale="l"
       >
         <WebMapSearch
           organizationId={"v400IkDOw1ad7Yad"}

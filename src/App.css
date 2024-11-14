@@ -13,30 +13,18 @@ map-web-component {
 
 
 
-.settings {
-  width: 35vw;
-  height: calc(100vh - 200px);
-  overflow: auto;
-  font-family: var(--calcite-sans-family);
-}
-
-.component {
-  width: 65vw;
-  height: calc(100vh - 200px);
-}
-
 .map-preview {
   width: 50vw;
   max-height: calc(100% - 175px);
 }
-.map-list {
+.list-panel {
   width: 50vw;
   overflow: auto;
   min-height: calc(100% - 70px);
 }
 
-.map-list img {
-  max-width: 200px;
+.list-panel img {
+  max-width: 150px;
 }
 
 .pagination-wrapper {
@@ -59,13 +47,51 @@ calcite-pagination {
   margin: 1em;
 }
 
-.map-list calcite-list {
-  max-height: calc(100% - 36px);
+@media only screen and (max-width: 767px) {
+
+  .search-container {
+    flex-direction: column;
+    height: 50vh;
+    margin: 0
+  }
+
+
+  .search-container calcite-panel {
+    height: 50vh;
+  }
+
+  .list-panel {
+    width: 100%;
+    min-height: calc(50vh - 60px);
+  }
+  .map-panel {
+    min-height: calc(50vh - 60px);
+  }
+
+  .list-panel calcite-list {
+    max-height: calc(100% - 36px);
+    overflow: auto;
+    height: calc(100% - 36px);
+  }
+  
+
+}
+
+.list-panel calcite-list {
+  max-height: calc(100vh - 200px);
   overflow: auto;
 }
 
-.map-list calcite-pagination {
-  width: 100%;
+.map-panel {
+  height: calc(100vh - 150px);
+}
+
+.map-panel arcgis-map {
+  max-height: calc(100vh - 200px);
+}
+
+.list-panel calcite-pagination {
+  min-width: 100%;
 }
 
 body, html {
@@ -82,7 +108,4 @@ calcite-label {
   height: auto;
 }
 
-.map-preview .arcgis-map {
-  height: calc(100% - 75px);
-}
 
