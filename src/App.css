@@ -56,6 +56,7 @@ calcite-pagination {
 .search-container {
   display: flex;
   max-height: 100%;
+  margin: 1em;
 }
 
 .map-list calcite-list {
