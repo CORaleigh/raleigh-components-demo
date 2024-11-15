@@ -67,7 +67,7 @@ function App() {
     "Solid Waste",
   ]);
   const [htmlTag, setHtmlTag] = useState("");
-  const [component, setComponent] = useState("Find My Service");
+  const [component, setComponent] = useState("Web Map");
   const [groupId, setGroupId] = useState("a8acaca3d4514d40bc7f302a8db291fb");
   const [webMapId, setWebMapId] = useState("d5dda743788a4b0688fe48f43ae7beb9");
   const [address, setAddress] = useState<string | undefined>();
@@ -286,15 +286,15 @@ function App() {
                 label={""}
               >
                 <CalciteOption
-                  selected={component === "Find My Service"}
-                  value="Find My Service"
-                  label="Find My Service"
-                ></CalciteOption>
-                <CalciteOption
                   selected={component === "Web Map"}
                   value="Web Map"
                   label="Web Map"
                 ></CalciteOption>
+                <CalciteOption
+                  selected={component === "Find My Service"}
+                  value="Find My Service"
+                  label="Find My Service"
+                ></CalciteOption>                
               </CalciteSelect>
             </CalciteLabel>
             {component === "Find My Service" && (
