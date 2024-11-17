@@ -90,7 +90,7 @@ function App() {
 
   const [showSettings, setShowSettings] = useState<boolean>(true);
 
-  const [overlay, setOverlay] = useState<boolean>(false);
+  const [overlay, setOverlay] = useState<boolean>(window.innerWidth < 768);
 
   useEffect(() => {
     let element;

@@ -65,15 +65,18 @@ calcite-pagination {
     min-height: calc(50vh - 60px);
   }
   .map-panel {
-    min-height: calc(50vh - 60px);
+    min-height: calc(50vh - 70px);
   }
+  
 
   .list-panel calcite-list {
     max-height: calc(100% - 36px);
     overflow: auto;
     height: calc(100% - 36px);
   }
-  
+  .map-panel arcgis-map {
+    max-height: calc(100% - 100px);
+  }
 
 }
 
@@ -86,9 +89,9 @@ calcite-pagination {
   height: calc(100vh - 150px);
 }
 
-.map-panel arcgis-map {
+/* .map-panel arcgis-map {
   max-height: calc(100vh - 200px);
-}
+} */
 
 .list-panel calcite-pagination {
   min-width: 100%;
