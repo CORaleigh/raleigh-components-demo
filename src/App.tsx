@@ -17,6 +17,8 @@ import "@esri/calcite-components/dist/components/calcite-navigation-logo";
 
 import "@esri/calcite-components/dist/components/calcite-panel";
 import "@esri/calcite-components/dist/components/calcite-block";
+import "@esri/calcite-components/dist/components/calcite-input-number";
+
 
 import {
   CalciteAction,
@@ -24,6 +26,8 @@ import {
   CalciteButton,
   CalciteDialog,
   CalciteInput,
+  CalciteInputMessage,
+  CalciteInputNumber,
   CalciteLabel,
   CalciteList,
   CalciteListItem,
@@ -38,6 +42,13 @@ import {
 } from "@esri/calcite-components-react";
 import { useEffect, useRef, useState } from "react";
 import WebMapSearch from "./WebMapSearch";
+import { getLayerSearchSource, getWebMapLayers } from "./map";
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import Field from "@arcgis/core/layers/support/Field.js";
+
+import { ArcgisSearch } from "@arcgis/map-components-react";
+import { ArcgisSearchCustomEvent } from "@arcgis/map-components";
+import { CalciteSelectCustomEvent } from "@esri/calcite-components";
 interface ValidationConstraint {
   id: string;
   patterns: ValidationPattern[];
@@ -54,10 +65,10 @@ interface Widget {
 }
 function App() {
   const widgets: Widget[] = [
-    {label: 'Search', id: 'search'},
-    {label: 'Layer List', id: 'layer-list'},
-    {label: 'Legend', id: 'legend'},
-  ]
+    { label: "Search", id: "search" },
+    { label: "Layer List", id: "layer-list" },
+    { label: "Legend", id: "legend" },
+  ];
   const [categories, setCategories] = useState([
     "Community",
     "Elections",
@@ -66,10 +77,13 @@ function App() {
     "Recreation",
     "Solid Waste",
   ]);
+
+  const layerSearch = useRef<HTMLArcgisSearchElement>(null);
+
   const [htmlTag, setHtmlTag] = useState("");
   const [component, setComponent] = useState("Web Map");
   const [groupId, setGroupId] = useState("a8acaca3d4514d40bc7f302a8db291fb");
-  const [webMapId, setWebMapId] = useState("d5dda743788a4b0688fe48f43ae7beb9");
+  const [webMapId, setWebMapId] = useState("6d87f3fa28ca440cb4e8133f6f5f9be2");
   const [address, setAddress] = useState<string | undefined>();
   const addressInput = useRef<HTMLCalciteInputElement>(null);
 
@@ -91,6 +105,21 @@ function App() {
   const [showSettings, setShowSettings] = useState<boolean>(true);
 
   const [overlay, setOverlay] = useState<boolean>(window.innerWidth < 768);
+
+  const [featureLayers, setFeatureLayers] = useState<FeatureLayer[]>([]);
+  const [selectedLayer, setSelectedLayer] = useState<FeatureLayer | undefined>(
+    undefined
+  );
+  const [selectedLayerFields, setSelectedLayerFields] = useState<Field[]>([]);
+
+  const [selectedField, setSelectedField] = useState<Field | undefined>(
+    undefined
+  );
+
+  const [filterLayer, setFilterLayer] = useState<string | undefined>(undefined);
+  const [filterQuery, setFilterQuery] = useState<string | undefined>(undefined);
+
+  const [searchBy, setSearchBy] = useState<string>("address");
 
   useEffect(() => {
     let element;
@@ -123,6 +152,8 @@ function App() {
     mapWidgets,
     expandableWidgets,
     expandedWidgets,
+    filterLayer,
+    filterQuery,
   ]);
 
   const centerValid = (center: string | undefined) => {
@@ -145,6 +176,40 @@ function App() {
     // Cleanup event listener on component unmount
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    (async () => {
+        if (webMapId && searchBy === 'feature') {
+          const layers = (
+            await getWebMapLayers(webMapId)
+          ).toArray() as FeatureLayer[];
+          setFeatureLayers(layers);
+          if (layers.length) {
+            await layers[0].load();
+            console.log(layers[0].fields);
+            setSelectedLayer(layers[0]);
+            const fields = layers[0].fields.filter(
+              (field) =>
+                [
+                  "string",
+                  "integer",
+                  "small-integer",
+                  "double",
+                  "single",
+                  "long",
+                ].includes(field.type) &&
+                !field.name.toUpperCase().includes("SHAPE")
+            )
+            setSelectedLayerFields(fields);
+            if (fields.length) {
+              setSelectedField(fields[0])
+
+            }
+          }
+        
+      }
+    })();
+  }, [searchBy, webMapId]);
 
   useEffect(() => {
     // Defines an array of objects with validation constraints, icons, and messages for fields.
@@ -276,7 +341,7 @@ function App() {
           position="start"
           id="shell-panel-start"
         >
-          <CalcitePanel heading="Settings">
+          <CalcitePanel id="settings-panel" heading="Settings">
             <CalciteLabel>
               Select Component
               <CalciteSelect
@@ -294,7 +359,7 @@ function App() {
                   selected={component === "Find My Service"}
                   value="Find My Service"
                   label="Find My Service"
-                ></CalciteOption>                
+                ></CalciteOption>
               </CalciteSelect>
             </CalciteLabel>
             {component === "Find My Service" && (
@@ -370,6 +435,20 @@ function App() {
                     </CalciteInput>
                   </CalciteLabel>
                   <CalciteLabel>
+                    Zoom Level
+                    <CalciteInputNumber
+                      max={20}
+                      min={1}
+                      integer
+                      placeholder="1-20"
+                      onCalciteInputNumberChange={(e) => {
+                        const zoomValue = parseInt(e.target.value);
+                        setZoom(isNaN(zoomValue) ? undefined : zoomValue);
+                      }}
+                    ></CalciteInputNumber>
+                    <CalciteInputMessage icon="information" status="idle">Value between 1 (fully zoomed out) and 20 (fully zoomed in)</CalciteInputMessage>
+                  </CalciteLabel>                  
+                  <CalciteLabel>
                     Stationary
                     <CalciteSwitch
                       onCalciteSwitchChange={() =>
@@ -379,30 +458,133 @@ function App() {
                     ></CalciteSwitch>
                   </CalciteLabel>
                 </CalciteBlock>
-                
+
                 <CalciteBlock collapsible heading={"Location"} iconStart="pin">
                   <CalciteLabel>
-                    Address
-                    <CalciteInput
-                      ref={addressInput}
-                      onCalciteInputChange={(e) => setAddress(e.target.value)}
-                    >
-                      <CalciteButton
-                        kind="inverse"
-                        iconStart="magnifying-glass"
-                        slot="action"
-                        scale="m"
-                        onClick={() => {
-                          if (addressInput.current) {
-                            setAddress(undefined);
+                    Set Location To
+                    <CalciteSelect label="search by" onCalciteSelectChange={(e: CalciteSelectCustomEvent<void>) => setSearchBy(e.target.selectedOption.value)}>
+                      <CalciteOption
+                        selected={searchBy === 'address'}
+                        value={"address"}
+                        label="Address"
+                      ></CalciteOption>
+                      <CalciteOption
+                        selected={searchBy === 'feature'}
+                        value={"feature"}
+                        label="Feature"
+                      ></CalciteOption>
+                      <CalciteOption
+                        selected={searchBy === 'center'}
+                        value={"center"}
+                        label="Longitude,Latitude"
+                      ></CalciteOption>                      
+                    </CalciteSelect>
+                  </CalciteLabel>
+                  {searchBy === "address" && (
+                    <CalciteLabel>
+                      Address
+                      <CalciteInput
+                        ref={addressInput}
+                        onCalciteInputChange={(e) => setAddress(e.target.value)}
+                      >
+                        <CalciteButton
+                          kind="inverse"
+                          iconStart="magnifying-glass"
+                          slot="action"
+                          scale="m"
+                          onClick={() => {
+                            if (addressInput.current) {
+                              setAddress(undefined);
+                              setTimeout(() => {
+                                setAddress(addressInput.current?.value);
+                              });
+                            }
+                          }}
+                        ></CalciteButton>
+                      </CalciteInput>
+                    </CalciteLabel>
+                  )}
+                 {searchBy === "feature" && (<>
+                    <CalciteLabel>
+                      Select Layer
+                      <CalciteSelect
+                        label={"layer"}
+                        onCalciteSelectChange={(e) =>
+                          setSelectedLayer(
+                            e.target.selectedOption.value as __esri.FeatureLayer
+                          )
+                        }
+                      >
+                        {featureLayers.map((layer) => {
+                          return (
+                            <CalciteOption
+                              key={layer.id}
+                              value={layer}
+                              label={layer.title}
+                            ></CalciteOption>
+                          );
+                        })}
+                      </CalciteSelect>
+                    </CalciteLabel>
+                  
+                  {selectedLayerFields.length && (
+                    <CalciteLabel>
+                      Select Field
+                      <CalciteSelect
+                        label={""}
+                        onCalciteSelectChange={(e) => {
+                          setSelectedField(e.target.selectedOption.value);
+                          layerSearch.current?.clearSearch();
+                        }}
+                      >
+                        {selectedLayerFields.map((field) => {
+                          return (
+                            <CalciteOption
+                              key={field.name}
+                              value={field}
+                              label={field.alias}
+                            ></CalciteOption>
+                          );
+                        })}
+                      </CalciteSelect>
+                    </CalciteLabel>
+                  )}
+                  {selectedField && (
+                    <CalciteLabel>
+                      <ArcgisSearch
+                        ref={layerSearch}
+                        sources={[
+                          getLayerSearchSource(
+                            selectedField,
+                            selectedLayer as FeatureLayer
+                          ),
+                        ]}
+                        includeDefaultSourcesDisabled
+                        onArcgisComplete={(
+                          e: ArcgisSearchCustomEvent<__esri.SearchSearchCompleteEvent>
+                        ) => {
+                          if (e.detail.numResults > 0) {
+                            const value =
+                              e.detail.results[0].results[0].feature.getAttribute(
+                                selectedField.name
+                              );
+                            setFilterLayer(selectedLayer?.title);
+                            setFilterQuery(undefined);
                             setTimeout(() => {
-                              setAddress(addressInput.current?.value);
-                            });
+                              setFilterQuery(
+                                selectedField.type === "string"
+                                  ? `${selectedField.alias} = '${value}'`
+                                  : `${selectedField.alias} = ${value}`
+                              );});
+
+
+                  
                           }
                         }}
-                      ></CalciteButton>
-                    </CalciteInput>
-                  </CalciteLabel>
+                      ></ArcgisSearch>
+                    </CalciteLabel>
+                  )}</>)}
+                  {searchBy === "center" &&
                   <CalciteLabel>
                     Center
                     <CalciteInput
@@ -411,18 +593,7 @@ function App() {
                       onCalciteInputChange={(e) => setCenter(e.target.value)}
                     ></CalciteInput>
                   </CalciteLabel>
-                  <CalciteLabel>
-                    Zoom Level
-                    <CalciteInput
-                      type="number"
-                      max={20}
-                      min={0}
-                      onCalciteInputChange={(e) => {
-                        const zoomValue = parseInt(e.target.value);
-                        setZoom(isNaN(zoomValue) ? undefined : zoomValue);
-                      }}
-                    ></CalciteInput>
-                  </CalciteLabel>
+                  }
                 </CalciteBlock>
 
                 <CalciteBlock collapsible heading="Widgets" iconStart="add-in">
@@ -446,78 +617,99 @@ function App() {
                     }}
                   >
                     {widgets.map((widget: Widget) => {
-                        return <CalciteListItem
-                        selected={mapWidgets.includes(widget.id)}
-                        value={widget.id}
-                        label={widget.label}
-                        key={widget.id}
-                      >
-                        {mapWidgets.includes(widget.id) && <div slot="content-bottom">
-                          <CalciteLabel layout="inline-space-between">
-                            Position
-                            <CalciteSelect
-  
-                              label={""}
-                              onCalciteSelectChange={(e) => {
-                                updatePosition(
-                                  e.target.selectedOption.value,
-                                  widget.id
-                                );
-                              }}
-                            >
-                              <CalciteOption
-                                value="top-left"
-                                label="top-left"
-                              ></CalciteOption>
-                              <CalciteOption
-                                value="top-right"
-                                label="top-right"
-                              ></CalciteOption>
-                              <CalciteOption
-                                value="bottom-left"
-                                label="bottom-left"
-                              ></CalciteOption>
-                              <CalciteOption
-                                value="bottom-right"
-                                label="bottom-right"
-                              ></CalciteOption>
-                            </CalciteSelect>
-                          </CalciteLabel>
-                          <CalciteLabel layout="inline-space-between">
-                            Expandable?
-                            <CalciteSwitch checked={expandableWidgets.includes(widget.id) ? true : undefined} onCalciteSwitchChange={(e) => {
-                                const { checked } = e.target;
-  
-                                setExpandableWidgets((prevItems) => {if (checked) {
-                                  // Add value if checkbox is checked and it's not already in the list
-                                  return [...prevItems, widget.id];
-                                } else {
-                                  // Remove value if checkbox is unchecked
-                                  return prevItems.filter((item) => item !== widget.id);
-                                }})
-                            }}>
-                            </CalciteSwitch>
-                          </CalciteLabel>
-                          <CalciteLabel layout="inline-space-between">
-                            Expanded?
-                            <CalciteSwitch checked={expandedWidgets.includes(widget.id) ? true : undefined} onCalciteSwitchChange={(e) => {
-                                const { checked } = e.target;
-  
-                                setExpandedWidgets((prevItems) => {if (checked) {
-                                  // Add value if checkbox is checked and it's not already in the list
-                                  return [...prevItems, widget.id];
-                                } else {
-                                  // Remove value if checkbox is unchecked
-                                  return prevItems.filter((item) => item !== widget.id);
-                                }})
-                            }}>
-                            </CalciteSwitch>
-                          </CalciteLabel>
-                        </div>
-                        }
-                      </CalciteListItem>
-                    })}
+                      return (
+                        <CalciteListItem
+                          selected={mapWidgets.includes(widget.id)}
+                          value={widget.id}
+                          label={widget.label}
+                          key={widget.id}
+                        >
+                          {mapWidgets.includes(widget.id) && (
+                            <div slot="content-bottom">
+                              <CalciteLabel layout="inline-space-between">
+                                Position
+                                <CalciteSelect
+                                  label={""}
+                                  onCalciteSelectChange={(e) => {
+                                    updatePosition(
+                                      e.target.selectedOption.value,
+                                      widget.id
+                                    );
+                                  }}
+                                >
+                                  <CalciteOption
+                                    value="top-left"
+                                    label="top-left"
+                                  ></CalciteOption>
+                                  <CalciteOption
+                                    value="top-right"
+                                    label="top-right"
+                                  ></CalciteOption>
+                                  <CalciteOption
+                                    value="bottom-left"
+                                    label="bottom-left"
+                                  ></CalciteOption>
+                                  <CalciteOption
+                                    value="bottom-right"
+                                    label="bottom-right"
+                                  ></CalciteOption>
+                                </CalciteSelect>
+                              </CalciteLabel>
+                              <CalciteLabel layout="inline-space-between">
+                                Expandable?
+                                <CalciteSwitch
+                                  checked={
+                                    expandableWidgets.includes(widget.id)
+                                      ? true
+                                      : undefined
+                                  }
+                                  onCalciteSwitchChange={(e) => {
+                                    const { checked } = e.target;
 
+                                    setExpandableWidgets((prevItems) => {
+                                      if (checked) {
+                                        // Add value if checkbox is checked and it's not already in the list
+                                        return [...prevItems, widget.id];
+                                      } else {
+                                        // Remove value if checkbox is unchecked
+                                        return prevItems.filter(
+                                          (item) => item !== widget.id
+                                        );
+                                      }
+                                    });
+                                  }}
+                                ></CalciteSwitch>
+                              </CalciteLabel>
+                              <CalciteLabel layout="inline-space-between">
+                                Expanded?
+                                <CalciteSwitch
+                                  checked={
+                                    expandedWidgets.includes(widget.id)
+                                      ? true
+                                      : undefined
+                                  }
+                                  onCalciteSwitchChange={(e) => {
+                                    const { checked } = e.target;
+
+                                    setExpandedWidgets((prevItems) => {
+                                      if (checked) {
+                                        // Add value if checkbox is checked and it's not already in the list
+                                        return [...prevItems, widget.id];
+                                      } else {
+                                        // Remove value if checkbox is unchecked
+                                        return prevItems.filter(
+                                          (item) => item !== widget.id
+                                        );
+                                      }
+                                    });
+                                  }}
+                                ></CalciteSwitch>
+                              </CalciteLabel>
+                            </div>
+                          )}
+                        </CalciteListItem>
+                      );
+                    })}
                   </CalciteList>
                 </CalciteBlock>
               </>
@@ -563,6 +755,8 @@ function App() {
               center={centerValid(center)}
               search={mapWidgets.includes("search") ? "" : undefined}
               legend={mapWidgets.includes("legend") ? "" : undefined}
+              filter-layer={filterLayer}
+              filter-query={filterQuery}
             ></map-web-component>
           )}
         </CalcitePanel>

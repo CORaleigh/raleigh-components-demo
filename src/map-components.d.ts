@@ -16,6 +16,8 @@ declare namespace JSX {
         'bottom-left'?: string[];
         'expand-positions'?: string[];
         expanded?: string[];
+        'filter-layer'?: string | undefined;
+        'filter-query'?: string | undefined;
       };
       'find-my-service': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
         'group-id'?: string;

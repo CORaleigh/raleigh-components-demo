@@ -16,7 +16,7 @@
     "@esri/calcite-components": "^2.13.2",
     "@esri/calcite-components-react": "^2.13.2",
     "memfs": "^4.14.0",
-    "raleigh-js-map-components": "^1.0.30",
+    "raleigh-js-map-components": "^1.0.31",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
