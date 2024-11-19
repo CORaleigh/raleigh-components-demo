@@ -19,7 +19,6 @@ import "@esri/calcite-components/dist/components/calcite-panel";
 import "@esri/calcite-components/dist/components/calcite-block";
 import "@esri/calcite-components/dist/components/calcite-input-number";
 
-
 import {
   CalciteAction,
   CalciteBlock,
@@ -179,34 +178,32 @@ function App() {
 
   useEffect(() => {
     (async () => {
-        if (webMapId && searchBy === 'feature') {
-          const layers = (
-            await getWebMapLayers(webMapId)
-          ).toArray() as FeatureLayer[];
-          setFeatureLayers(layers);
-          if (layers.length) {
-            await layers[0].load();
-            console.log(layers[0].fields);
-            setSelectedLayer(layers[0]);
-            const fields = layers[0].fields.filter(
-              (field) =>
-                [
-                  "string",
-                  "integer",
-                  "small-integer",
-                  "double",
-                  "single",
-                  "long",
-                ].includes(field.type) &&
-                !field.name.toUpperCase().includes("SHAPE")
-            )
-            setSelectedLayerFields(fields);
-            if (fields.length) {
-              setSelectedField(fields[0])
-
-            }
+      if (webMapId && searchBy === "feature") {
+        const layers = (
+          await getWebMapLayers(webMapId)
+        ).toArray() as FeatureLayer[];
+        setFeatureLayers(layers);
+        if (layers.length) {
+          await layers[0].load();
+          console.log(layers[0].fields);
+          setSelectedLayer(layers[0]);
+          const fields = layers[0].fields.filter(
+            (field) =>
+              [
+                "string",
+                "integer",
+                "small-integer",
+                "double",
+                "single",
+                "long",
+              ].includes(field.type) &&
+              !field.name.toUpperCase().includes("SHAPE")
+          );
+          setSelectedLayerFields(fields);
+          if (fields.length) {
+            setSelectedField(fields[0]);
           }
-        
+        }
       }
     })();
   }, [searchBy, webMapId]);
@@ -310,7 +307,7 @@ function App() {
       );
     }
     if (position === "bottom-right") {
-      setTopRightPosition((prevState) => [...prevState, widget]);
+      setBottomRightPosition((prevState) => [...prevState, widget]);
       setTopLeftPosition(topLeftPosition.filter((item) => item !== widget));
       setTopRightPosition(topRightPosition.filter((item) => item !== widget));
       setBottomLeftPosition(
@@ -446,8 +443,11 @@ function App() {
                         setZoom(isNaN(zoomValue) ? undefined : zoomValue);
                       }}
                     ></CalciteInputNumber>
-                    <CalciteInputMessage icon="information" status="idle">Value between 1 (fully zoomed out) and 20 (fully zoomed in)</CalciteInputMessage>
-                  </CalciteLabel>                  
+                    <CalciteInputMessage icon="information" status="idle">
+                      Value between 1 (fully zoomed out) and 20 (fully zoomed
+                      in)
+                    </CalciteInputMessage>
+                  </CalciteLabel>
                   <CalciteLabel>
                     Stationary
                     <CalciteSwitch
@@ -462,22 +462,27 @@ function App() {
                 <CalciteBlock collapsible heading={"Location"} iconStart="pin">
                   <CalciteLabel>
                     Set Location To
-                    <CalciteSelect label="search by" onCalciteSelectChange={(e: CalciteSelectCustomEvent<void>) => setSearchBy(e.target.selectedOption.value)}>
+                    <CalciteSelect
+                      label="search by"
+                      onCalciteSelectChange={(
+                        e: CalciteSelectCustomEvent<void>
+                      ) => setSearchBy(e.target.selectedOption.value)}
+                    >
                       <CalciteOption
-                        selected={searchBy === 'address'}
+                        selected={searchBy === "address"}
                         value={"address"}
                         label="Address"
                       ></CalciteOption>
                       <CalciteOption
-                        selected={searchBy === 'feature'}
+                        selected={searchBy === "feature"}
                         value={"feature"}
                         label="Feature"
                       ></CalciteOption>
                       <CalciteOption
-                        selected={searchBy === 'center'}
+                        selected={searchBy === "center"}
                         value={"center"}
                         label="Longitude,Latitude"
-                      ></CalciteOption>                      
+                      ></CalciteOption>
                     </CalciteSelect>
                   </CalciteLabel>
                   {searchBy === "address" && (
@@ -504,96 +509,98 @@ function App() {
                       </CalciteInput>
                     </CalciteLabel>
                   )}
-                 {searchBy === "feature" && (<>
+                  {searchBy === "feature" && (
+                    <>
+                      <CalciteLabel>
+                        Select Layer
+                        <CalciteSelect
+                          label={"layer"}
+                          onCalciteSelectChange={(e) =>
+                            setSelectedLayer(
+                              e.target.selectedOption
+                                .value as __esri.FeatureLayer
+                            )
+                          }
+                        >
+                          {featureLayers.map((layer) => {
+                            return (
+                              <CalciteOption
+                                key={layer.id}
+                                value={layer}
+                                label={layer.title}
+                              ></CalciteOption>
+                            );
+                          })}
+                        </CalciteSelect>
+                      </CalciteLabel>
+
+                      {selectedLayerFields.length && (
+                        <CalciteLabel>
+                          Select Field
+                          <CalciteSelect
+                            label={""}
+                            onCalciteSelectChange={(e) => {
+                              setSelectedField(e.target.selectedOption.value);
+                              layerSearch.current?.clearSearch();
+                            }}
+                          >
+                            {selectedLayerFields.map((field) => {
+                              return (
+                                <CalciteOption
+                                  key={field.name}
+                                  value={field}
+                                  label={field.alias}
+                                ></CalciteOption>
+                              );
+                            })}
+                          </CalciteSelect>
+                        </CalciteLabel>
+                      )}
+                      {selectedField && (
+                        <CalciteLabel>
+                          <ArcgisSearch
+                            ref={layerSearch}
+                            sources={[
+                              getLayerSearchSource(
+                                selectedField,
+                                selectedLayer as FeatureLayer
+                              ),
+                            ]}
+                            includeDefaultSourcesDisabled
+                            onArcgisComplete={(
+                              e: ArcgisSearchCustomEvent<__esri.SearchSearchCompleteEvent>
+                            ) => {
+                              if (e.detail.numResults > 0) {
+                                const value =
+                                  e.detail.results[0].results[0].feature.getAttribute(
+                                    selectedField.name
+                                  );
+                                setFilterLayer(selectedLayer?.title);
+                                setFilterQuery(undefined);
+                                setTimeout(() => {
+                                  setFilterQuery(
+                                    selectedField.type === "string"
+                                      ? `${selectedField.alias} = '${value}'`
+                                      : `${selectedField.alias} = ${value}`
+                                  );
+                                });
+                              }
+                            }}
+                          ></ArcgisSearch>
+                        </CalciteLabel>
+                      )}
+                    </>
+                  )}
+                  {searchBy === "center" && (
                     <CalciteLabel>
-                      Select Layer
-                      <CalciteSelect
-                        label={"layer"}
-                        onCalciteSelectChange={(e) =>
-                          setSelectedLayer(
-                            e.target.selectedOption.value as __esri.FeatureLayer
-                          )
-                        }
-                      >
-                        {featureLayers.map((layer) => {
-                          return (
-                            <CalciteOption
-                              key={layer.id}
-                              value={layer}
-                              label={layer.title}
-                            ></CalciteOption>
-                          );
-                        })}
-                      </CalciteSelect>
-                    </CalciteLabel>
-                  
-                  {selectedLayerFields.length && (
-                    <CalciteLabel>
-                      Select Field
-                      <CalciteSelect
-                        label={""}
-                        onCalciteSelectChange={(e) => {
-                          setSelectedField(e.target.selectedOption.value);
-                          layerSearch.current?.clearSearch();
-                        }}
-                      >
-                        {selectedLayerFields.map((field) => {
-                          return (
-                            <CalciteOption
-                              key={field.name}
-                              value={field}
-                              label={field.alias}
-                            ></CalciteOption>
-                          );
-                        })}
-                      </CalciteSelect>
+                      Center
+                      <CalciteInput
+                        id="center"
+                        pattern="^(-?(1[0-7][0-9]|[1-9]?[0-9]|180)(\.\d{1,6})?),\s*(-?(90|[1-8]?[0-9])(\.\d{1,6})?)"
+                        onCalciteInputChange={(e) => setCenter(e.target.value)}
+                      ></CalciteInput>
                     </CalciteLabel>
                   )}
-                  {selectedField && (
-                    <CalciteLabel>
-                      <ArcgisSearch
-                        ref={layerSearch}
-                        sources={[
-                          getLayerSearchSource(
-                            selectedField,
-                            selectedLayer as FeatureLayer
-                          ),
-                        ]}
-                        includeDefaultSourcesDisabled
-                        onArcgisComplete={(
-                          e: ArcgisSearchCustomEvent<__esri.SearchSearchCompleteEvent>
-                        ) => {
-                          if (e.detail.numResults > 0) {
-                            const value =
-                              e.detail.results[0].results[0].feature.getAttribute(
-                                selectedField.name
-                              );
-                            setFilterLayer(selectedLayer?.title);
-                            setFilterQuery(undefined);
-                            setTimeout(() => {
-                              setFilterQuery(
-                                selectedField.type === "string"
-                                  ? `${selectedField.alias} = '${value}'`
-                                  : `${selectedField.alias} = ${value}`
-                              );});
-
-
-                  
-                          }
-                        }}
-                      ></ArcgisSearch>
-                    </CalciteLabel>
-                  )}</>)}
-                  {searchBy === "center" &&
-                  <CalciteLabel>
-                    Center
-                    <CalciteInput
-                      id="center"
-                      pattern="^(-?(1[0-7][0-9]|[1-9]?[0-9]|180)(\.\d{1,6})?),\s*(-?(90|[1-8]?[0-9])(\.\d{1,6})?)"
-                      onCalciteInputChange={(e) => setCenter(e.target.value)}
-                    ></CalciteInput>
-                  </CalciteLabel>
-                  }
                 </CalciteBlock>
 
                 <CalciteBlock collapsible heading="Widgets" iconStart="add-in">
