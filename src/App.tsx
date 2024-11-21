@@ -5,6 +5,7 @@ import "@esri/calcite-components/dist/components/calcite-select";
 import "@esri/calcite-components/dist/components/calcite-label";
 import "@esri/calcite-components/dist/components/calcite-dialog";
 import "@esri/calcite-components/dist/components/calcite-button";
+import "@esri/calcite-components/dist/components/calcite-action";
 
 import "@esri/calcite-components/dist/components/calcite-option";
 import "@esri/calcite-components/dist/components/calcite-switch";
@@ -724,9 +725,24 @@ function App() {
           </CalcitePanel>
         </CalciteShellPanel>
         <CalcitePanel>
-          <div className="code-container">
+          <CalciteLabel layout="inline-space-between">
             <code>{htmlTag}</code>
-          </div>
+            <CalciteAction alignment="end" label="Save" icon="save" scale="m" text={""}
+              onClick={() => {
+                const component = {
+                  type: 'COMPONENT_SAVED',
+                  data: {
+                    html: htmlTag
+                  }
+                }
+                window.parent.postMessage(component, '*')
+              }}
+            ></CalciteAction>
+
+          </CalciteLabel>
+          {/* <div className="code-container">
+            <code>{htmlTag}</code>
+          </div> */}
 
           {component === "Find My Service" && (
             <find-my-service
